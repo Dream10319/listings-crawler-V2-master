@@ -1,0 +1,7 @@
+pymongo
+pyqt5
+mechanicalsoup
+dotenv
+pyinstaller
+
+#pyinstaller --onefile --windowed app.py
