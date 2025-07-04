@@ -45,75 +45,61 @@ class ctcScrape_thread(QThread):
 
 # Function to process each li_element
 def process_record_element(record_element):
-    with mechanicalsoup.StatefulBrowser() as browser:
-        record = {
-            "website": "ctc-associates.com",
-            "origin": "https://ctc-associates.com/dental-practices-for-sale",
-            "type": "",
-            "state": "",
-            "city": "",
-            "operatory": 0,
-            "square_ft": "",
-            "price": "",
-            "annual_collections": "",
-            "valid": True,
-            "details": ""
-        }
-        state_element = record_element.select("ul > li")[2]
-        record["state"] = state_element.text.replace('STATE: ', '').strip()
+    # Skip if listing is sold or pending
+    class_list = record_element.get("class", [])
+    if "sold" in class_list or "pending" in class_list:
+        return None
 
-        city_element = record_element.select("ul > li")[3]
-        record["city"] = city_element.text.replace('AREA: ', '').strip()
-        if record["city"] == 'TBD': record["city"] = ""
+    record = {
+        "website": "ctc-associates.com",
+        "origin": "https://ctc-associates.com/dental-practices-for-sale",
+        "type": "",
+        "state": "",
+        "city": "",
+        "operatory": 0,
+        "square_ft": "",
+        "price": "",
+        "annual_collections": "",
+        "valid": True,
+        "details": "",
+        "source_link": "",
+        "name": "",
+        "admin_content": []
+    }
 
-        a_tag = record_element.select_one("li.directory_link a")
-        if a_tag:
-            href = a_tag["href"]
-            record["source_link"] = href
+    li_elements = record_element.select("ul > li")
 
-            sub_page = browser.open(href)
+    # Set source link and name
+    a_tag = record_element.select_one("li.directory_link a")
+    if a_tag:
+        record["source_link"] = "https://ctc-associates.com" + a_tag["href"]
+        record["name"] = a_tag.text.strip()
 
-            ol = sub_page.soup.select_one("ol.breadcrumb")
-            sheet_name = ol.select("li")[-1].text
-            record["name"] = sheet_name
-            # content = []
-            admin_content = []
+    # Extract key details from available inline fields
+    for li in li_elements:
+        text = li.get_text(strip=True)
+        if "TYPE:" in text:
+            record["type"] = li.text.replace("TYPE:", "").strip()
+        elif "STATE:" in text:
+            record["state"] = li.text.replace("STATE:", "").strip()
+        elif "AREA:" in text:
+            city = li.text.replace("AREA:", "").strip()
+            record["city"] = "" if city == "TBD" else city
+        elif "COLLs:" in text:
+            record["annual_collections"] = li.text.replace("COLLs:", "").strip()
+        elif "OPs:" in text:
+            match = re.search(r'\d+', li.text)
+            if match:
+                record["operatory"] = int(match.group())
+        elif "REF#:" in text:
+            value = li.text.replace("REF#:", "").strip()
+            if value.lower() in ["sold", "under contract", "unavailable"]:
+                record["valid"] = False
+        elif "NET:" in text:
+            # optionally include in admin content
+            record["admin_content"].append({
+                "key": "Net Income",
+                "value": li.text.replace("NET:", "").strip()
+            })
 
-            # Add a new sheet
-            detailDiv = sub_page.soup.select_one("ul.detailDiv")
-            ul_elements = detailDiv.select("li > ul")
-
-            for ul_element in ul_elements:
-                li_items = ul_element.select("li")
-                if len(li_items) >= 2:
-                    key, value = li_items[0].text.strip(), li_items[1].text.strip()
-                    # admin_content.append({ key: value })
-                    lower_value = value.lower()
-                    if key == 'Standing' and ("unavailable" in lower_value or "sold" in lower_value):
-                        record["valid"] = False
-                        
-                    if key != 'Listing ID':
-                        if key == 'Practice Type':
-                            for type in practice_types:
-                                lower_type = type.lower()
-                                if lower_type in lower_value:
-                                    record["type"] = type
-                                    break
-                        elif key == 'Number of Operatories':
-                            if value != "":
-                                record["operatory"] = int(re.findall(r'\d+', value)[0])
-                        elif key == 'Approximate Square Feet':
-                            record["square_ft"] = value
-                        elif key == 'Purchase Price':
-                            record["price"] = value
-                        elif key == 'Gross Income':
-                            record["annual_collections"] = value
-                        # if key != "Additional Information":
-                        #     content.append({ key: value })
-                        if key == "Additional Information":
-                            record["details"] = value
-                            admin_content.append({ "key": key, "value": value })
-                            
-            # record["content"] = json.dumps(content)
-            record["admin_content"] = admin_content
-            return record
+    return record

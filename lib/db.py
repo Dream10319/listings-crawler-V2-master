@@ -34,6 +34,7 @@ class save_data_thread(QThread):
                         data["type"] = response["type"]
                         data["city"] = response["city"]
                         data["state"] = response["state"]
+                        data["price"] = response["price"]
                     elif data["website"] == "adsprecise.com":
                         response_string = chat_gpt(prompt=build_prompt_adsprecise(data["name"], data["details"], data["source_link"]))
                         response_string = response_string.replace("```", "").replace("json", "")

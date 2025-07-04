@@ -8,7 +8,7 @@ def build_prompt_ctcassociates(title, description, link):
     full_content = extract_full_text_from_link(link)
     prompt = f"""
         Your task is to rewrite the title and description from full content and original title and description.
-        And need to get city and state, practice type also.
+        And need to get city and state, practice, price type also.
 
         Title: "{title}"
         Description: "{description}"
@@ -25,7 +25,8 @@ def build_prompt_ctcassociates(title, description, link):
             "description": "",
             "city": "",
             "state": "",
-            "type": ""
+            "type": "",
+            "price":""
         }}
 
         **Output**
