@@ -46,7 +46,6 @@ def process_record_element(li_element):
         "valid": True,
         "details": "",
         "name": "",
-        "status": "",
         "source_link": "",
     }
     # Name/title
@@ -71,7 +70,6 @@ def process_record_element(li_element):
     status_label = li_element.find('div', id=lambda x: x and 'comp-lmpshb77' in x)
     if status_label and status_label.find_next_sibling():
         status_value = status_label.find_next_sibling().get_text(strip=True).upper()
-        record["status"] = status_value
         if "UNDER CONTRACT" in status_value:
             return None  # SKIP this record
     # Link

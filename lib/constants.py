@@ -169,7 +169,8 @@ def build_prompt_westernpractice(title, link):
             "annual_collections: "",
             "city": "",
             "state": "",
-            "type": ""
+            "type": "",
+            "price":""
         }}
 
         **Output**

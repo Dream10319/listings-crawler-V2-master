@@ -13,7 +13,7 @@ class save_data_thread(QThread):
         self.data_array = data_array
 
     def run(self):
-        client = MongoClient(os.environ.get('MONGO_URL'),connectTimeoutMS=30000, socketTimeoutMS=30000)
+        client = MongoClient(os.environ.get('MONGO_URL'),connectTimeoutMS=60000, socketTimeoutMS=60000)
         db = client[os.environ.get('MONGO_DATABASE')]
         collection = db[os.environ.get('MONGO_COLLECTION')]
 
@@ -126,6 +126,7 @@ class save_data_thread(QThread):
                         data["type"] = response["type"]
                         data["city"] = response["city"]
                         data["state"] = response["state"]
+                        data["price"] = response["price"]
                     if exist_document:
                         data.pop('valid', None)
                         collection.update_one({"_id": exist_document["_id"]}, {"$set": data})
