@@ -13,7 +13,7 @@ class save_data_thread(QThread):
         self.data_array = data_array
 
     def run(self):
-        client = MongoClient(os.environ.get('MONGO_URL'))
+        client = MongoClient(os.environ.get('MONGO_URL'),connectTimeoutMS=30000, socketTimeoutMS=30000)
         db = client[os.environ.get('MONGO_DATABASE')]
         collection = db[os.environ.get('MONGO_COLLECTION')]
 
@@ -115,6 +115,17 @@ class save_data_thread(QThread):
                         data["operatory"] = response["operatory"]
                         data["city"] = response["city"]
                         data["price"] = response["price"]
+                    elif data["website"] == "www.dentalpractices4sale.com":
+                        response_string = chat_gpt(prompt=build_prompt_westernpractice(data["name"], data["source_link"]))
+                        response_string = response_string.replace("```", "").replace("json", "")
+                        response = json.loads(response_string)
+                        data["name"] = response["title"]
+                        data["details"] = response["description"]
+                        data["operatory"] = response["operatory"]
+                        data["annual_collections"] = response["annual_collections"]
+                        data["type"] = response["type"]
+                        data["city"] = response["city"]
+                        data["state"] = response["state"]
                     if exist_document:
                         data.pop('valid', None)
                         collection.update_one({"_id": exist_document["_id"]}, {"$set": data})

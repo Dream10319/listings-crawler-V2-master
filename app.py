@@ -4,6 +4,7 @@ from PyQt5.QtCore import Qt
 from scrape.ctcassociates import *
 from scrape.adsprecise import *
 from scrape.adstransitions import *
+from scrape.dental4sale import *
 from scrape.dentaltrans import *
 from scrape.fryepracticesales import *
 from scrape.menlotransitions import *
@@ -48,6 +49,7 @@ class MyWidget(QWidget):
         self.combo_box.addItem("omni-pg.com")
         self.combo_box.addItem("westernpracticesales.com")
         self.combo_box.addItem("dentalpracticetransitions.henryschein.com")
+        self.combo_box.addItem("dentalpractices4sale.com")
         
         combo_font = self.combo_box.font()
         combo_font.setPointSize(15)
@@ -126,6 +128,10 @@ class MyWidget(QWidget):
             self.thread.start()
         elif origin == "dentalpracticetransitions.henryschein.com":
             self.thread = henryscheinScrape_thread()
+            self.thread.finished.connect(self.handle_scraping_result)
+            self.thread.start()
+        elif origin == "dentalpractices4sale.com":
+            self.thread = dental4sale_thread()
             self.thread.finished.connect(self.handle_scraping_result)
             self.thread.start()
 
