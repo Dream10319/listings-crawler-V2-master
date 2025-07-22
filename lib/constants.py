@@ -208,7 +208,7 @@ def build_prompt_henryschein(title, link):
 
 def extract_full_text_from_link(link):
     try:
-        response = requests.get(link, headers={"User-Agent": "Mozilla/5.0"})
+        response = requests.get(link, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"})
         response.raise_for_status()
 
         soup = BeautifulSoup(response.text, "html.parser")
