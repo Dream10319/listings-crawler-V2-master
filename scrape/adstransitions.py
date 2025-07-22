@@ -5,12 +5,12 @@ from concurrent.futures import ThreadPoolExecutor
 from PyQt5.QtCore import QThread, pyqtSignal
 
 headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                  "AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/114.0.0.0 Safari/537.36",
-    "Referer": "https://www.adstransitions.com/",
-    "Accept": "application/json, text/javascript, */*; q=0.01",
-    "X-Requested-With": "XMLHttpRequest"
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7"
 }
 
 class adstransitionScrape_thread(QThread):
@@ -21,9 +21,10 @@ class adstransitionScrape_thread(QThread):
 
     def run(self):
         browser = mechanicalsoup.Browser()
-        url = "https://www.adstransitions.com/practices-for-sale"
+        url = "https://www.adstransitions.com/practices-for-sale/"
         page = browser.get(url, headers=headers)
-        href_elements = page.soup.select(".view-all")
+        href_elements = page.soup.select(".prac-for-sale-block")
+
         dataArray = []
 
         # Use ThreadPoolExecutor to process li_elements concurrently
@@ -40,52 +41,60 @@ class adstransitionScrape_thread(QThread):
                     print(f"An error occurred: {e}")
         self.finished.emit(dataArray)
 
-# Function to process each li_element
 def process_href_element(href_element):
-    with mechanicalsoup.StatefulBrowser() as browser:
-        record = {
-            "origin": "https://www.adstransitions.com/practices-for-sale",
-            "state": "",
-            "type": "",
-            "city": "",
-            "operatory": 0,
-            "square_ft": "",
-            "price": "",
-            "annual_collections": ""
-        }
-        href = href_element["href"]
-        record["signature"] = href[:-1]
-        sub_page = browser.get(href, headers=headers)
+    # href_element is a BeautifulSoup element representing .prac-for-sale-block
 
-        h1_element = sub_page.soup.select(".profile-page > .row h1")[0]
-        record["name"] = h1_element.text
+    record = {
+        "website": "www.adstransitions.com",
+        "origin": "https://www.adstransitions.com/practices-for-sale",
+        "type": "",
+        "state": "",
+        "city": "",
+        "operatory": "",
+        "square_ft": "",
+        "price": "",
+        "annual_collections": "",
+        "valid": True,
+        "details": "",
+        "name": "",
+        "source_link": "",
+    }
+    # Get name (title)
+    try:
+        record["name"] = href_element.select_one("h3.list-heading").get_text(strip=True)
+    except Exception:
+        record["name"] = ""
 
-        divs = sub_page.soup.select(".profile-page > div.col-md-8 > div.col-md-6")
-        pairs = []
-        content = []
-        admin_content = []
-        admin_content.append({ 'Title': record["name"] })
+    # Get source link
+    try:
+        record["source_link"] = href_element.select_one("a.view-list-button")["href"]
+    except Exception:
+        record["source_link"] = ""
 
-        for i in range(0, len(divs), 2):
-            odd = divs[i].text.strip()
-            even = divs[i+1].text.strip()
-            pairs.append((odd, even))
-        
-        for odd, even in pairs:
-            if odd == 'State':
-                record["state"] = even
-                admin_content.append({ 'State': even })
-            elif odd == 'City or Advertised Area':
-                record["city"] = even
-                admin_content.append({ 'City': even })
-            else:
-                admin_content.append({ odd: even })
-            if odd != 'Listing Reference Number':
-                content.append({ odd: even })
+    # Parse the details table
+    content = []
+    admin_content = []
+    details_table = href_element.select_one("table.list-table")
+    skip_listing = False
+    if details_table:
+        for row in details_table.select("tr"):
+            label_td = row.select_one("td.list-label")
+            value_td = row.select_one("td.label-value span")
+            if not label_td or not value_td:
+                continue
+            label = label_td.get_text(strip=True).replace(":", "")
+            value = value_td.get_text(strip=True)
+            content.append({label: value})
+            admin_content.append({label: value})
+            if label == "State":
+                record["state"] = value
+            elif label in ["City", "City or Advertised Area"]:
+                record["city"] = value
+            elif label == "Status Type" and value.lower() == "under contract":
+                skip_listing = True
+            elif label == "Operatories":
+                record["operatory"] = value
 
-        admin_content.append({"phone":sub_page.soup.select(".info-card-detail")[0].text.strip()})
-        admin_content.append({"email": sub_page.soup.select(".info-card-detail")[1].text.strip()})
-
-        record["content"] = json.dumps(content)
-        record["admin_content"] = json.dumps(admin_content)
-        return record
+    if skip_listing:
+        return None  # Skip this listing
+    return record

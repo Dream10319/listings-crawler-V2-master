@@ -7,6 +7,7 @@ from scrape.adstransitions import *
 from scrape.dental4sale import *
 from scrape.dentaltrans import *
 from scrape.fryepracticesales import *
+from scrape.mcvaytransitions import *
 from scrape.menlotransitions import *
 from scrape.dgtransitions import *
 from scrape.knutzenmcvaygroup import *
@@ -37,7 +38,7 @@ class MyWidget(QWidget):
         #----------- Websites --------------------
         self.combo_box.addItem("ctc-associates.com")
         self.combo_box.addItem("adsprecise.com")
-        # self.combo_box.addItem("adstransitions.com")
+        self.combo_box.addItem("adstransitions.com")
         self.combo_box.addItem("dentaltrans.com")
         # self.combo_box.addItem("fryepracticesales.com")
         self.combo_box.addItem("menlotransitions.com")
@@ -50,6 +51,7 @@ class MyWidget(QWidget):
         self.combo_box.addItem("westernpracticesales.com")
         self.combo_box.addItem("dentalpracticetransitions.henryschein.com")
         self.combo_box.addItem("dentalpractices4sale.com")
+        self.combo_box.addItem("mcvaytransitions.com")
         
         combo_font = self.combo_box.font()
         combo_font.setPointSize(15)
@@ -132,6 +134,14 @@ class MyWidget(QWidget):
             self.thread.start()
         elif origin == "dentalpractices4sale.com":
             self.thread = dental4sale_thread()
+            self.thread.finished.connect(self.handle_scraping_result)
+            self.thread.start()
+        elif origin == "mcvaytransitions.com":
+            self.thread = mcvaytransitions_thread()
+            self.thread.finished.connect(self.handle_scraping_result)
+            self.thread.start()
+        elif origin == "adstransitions.com":
+            self.thread = adstransitionScrape_thread()
             self.thread.finished.connect(self.handle_scraping_result)
             self.thread.start()
 

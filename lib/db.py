@@ -127,6 +127,30 @@ class save_data_thread(QThread):
                         data["city"] = response["city"]
                         data["state"] = response["state"]
                         data["price"] = response["price"]
+                    elif data["website"] == "www.mcvaytransitions.com":
+                        response_string = chat_gpt(prompt=build_prompt_westernpractice(data["name"], data["source_link"]))
+                        response_string = response_string.replace("```", "").replace("json", "")
+                        response = json.loads(response_string)
+                        data["name"] = response["title"]
+                        data["details"] = response["description"]
+                        data["operatory"] = response["operatory"]
+                        data["annual_collections"] = response["annual_collections"]
+                        data["type"] = response["type"]
+                        data["city"] = response["city"]
+                        data["state"] = response["state"]
+                        data["price"] = response["price"]
+                    elif data["website"] == "www.adstransitions.com":
+                        response_string = chat_gpt(prompt=build_prompt_westernpractice(data["name"], data["source_link"]))
+                        response_string = response_string.replace("```", "").replace("json", "")
+                        response = json.loads(response_string)
+                        data["name"] = response["title"]
+                        data["details"] = response["description"]
+                        data["operatory"] = response["operatory"]
+                        data["annual_collections"] = response["annual_collections"]
+                        data["type"] = response["type"]
+                        data["city"] = response["city"]
+                        data["state"] = response["state"]
+                        data["price"] = response["price"]
                     if exist_document:
                         data.pop('valid', None)
                         collection.update_one({"_id": exist_document["_id"]}, {"$set": data})
