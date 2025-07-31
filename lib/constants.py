@@ -36,7 +36,7 @@ def build_prompt_ctcassociates(title, description, link):
 
 def build_prompt_menlotransitions(title, description):
     prompt = f"""
-        Your task is to rewrite the title and description from full content and original title and description.
+        Your task is to rewrite the title and description and need to get city and state, practice type from original title and description.
 
         Title: "{title}"
         Description: "{description}"
@@ -50,6 +50,9 @@ def build_prompt_menlotransitions(title, description):
         {{
             "title": "",
             "description": "",
+            "city": "",
+            "state": "",
+            "type": ""
         }}
 
         **Output**
@@ -70,7 +73,7 @@ def build_prompt_adsprecise(title, description, link):
         **Requirements**
         - Exclude email addresses, URLs, and phone numbers, first and last names
         - Exclude listing #’s or listing IDs or CODES numbers or Serial Numbers.
-        
+
         **Output JSON Format**
         The output must adhere to the following structure:
         {{
