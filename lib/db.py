@@ -49,11 +49,16 @@ class save_data_thread(QThread):
                     elif data["website"] == "www.dentaltrans.com":
                         pass
                     elif data["website"] == "www.menlotransitions.com":
-                        response_string = chat_gpt(prompt=build_prompt_menlotransitions(data["name"], data["details"]))
+                        response_string = chat_gpt(prompt=build_prompt_adsprecise(data["name"], data["details"], data["source_link"]))
                         response_string = response_string.replace("```", "").replace("json", "")
                         response = json.loads(response_string)
                         data["name"] = response["title"]
                         data["details"] = response["description"]
+                        data["operatory"] = response["operatory"]
+                        data["annual_collections"] = response["annual_collections"]
+                        data["type"] = response["type"]
+                        data["city"] = response["city"]
+                        data["state"] = response["state"]
                     elif data["website"] == "mydentalbroker.com":
                         response_string = chat_gpt(prompt=build_prompt_adsprecise(data["name"], data["details"], data["source_link"]))
                         response_string = response_string.replace("```", "").replace("json", "")
